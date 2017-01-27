@@ -1,41 +1,56 @@
-# Ruby on Rails Tutorial sample application
+# Tutorial de Ruby on Rails 5
 
-This is the sample application for
-[*Ruby on Rails Tutorial:
-Learn Web Development with Rails*](http://www.railstutorial.org/)
-by [Michael Hartl](http://www.michaelhartl.com/).
+Aplicación resultante del [Tutorial de Ruby on Rails](http://www.railstutorial.org/) de [Michael Hartl](http://www.michaelhartl.com/).
 
-## License
+<div id='index'/>
+## Índice
 
-All source code in the [Ruby on Rails Tutorial](http://railstutorial.org/)
-is available jointly under the MIT License and the Beerware License. See
-[LICENSE.md](LICENSE.md) for details.
+1. [Entorno](#seccion01)
+2. [Instalación](#seccion02)
+3. [Parte 1 - Comienzo de la aplicación](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/01/README.md)
+4. [Parte 1.5 - Configuración avanzada de testeo](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/01_5/README.md)
+5. [Parte 2 - Segunda parte](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/02/README.md)
 
-## Getting started
+<div id='seccion01'/>
+## Entorno
 
-To get started with the app, clone the repo and then install the needed gems:
+[Volver al índice](#index)
 
+1. Ruby 2.3.3
+2. Ruby on Rails 5.0.1
+3. Ubuntu 16.04.1 LTS
+4. SQLite3
+5. Minitest
+
+<div id='seccion02'/>
+## Instalación
+
+[Volver al índice](#index)
+
+Para instalar ruby se utilizará **rbenv** que permitirá gestionar distintas versiones de ruby y utilizar la más conveniente.
+
+```bash
+sudo apt-get update
+sudo apt-get install git-core curl zlib1g-dev build-essential libssl-dev libreadline-dev libyaml-dev libsqlite3-dev sqlite3 libxml2-dev libxslt1-dev libcurl4-openssl-dev python-software-properties libffi-dev
+cd
+git clone https://github.com/rbenv/rbenv.git ~/.rbenv
+echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bashrc
+echo 'eval "$(rbenv init -)"' >> ~/.bashrc
+exec $SHELL
+git clone https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build
+echo 'export PATH="$HOME/.rbenv/plugins/ruby-build/bin:$PATH"' >> ~/.bashrc
+exec $SHELL
+rbenv install 2.3.3
+rbenv global 2.3.3
+ruby -v
 ```
-$ bundle install --without production
+
+Luego ejecutamos:
+
+```bash
+gem install bundler
+rbenv rehash
+gem install rails -v 5.0.1
+rbenv rehash
 ```
 
-Next, migrate the database:
-
-```
-$ rails db:migrate
-```
-
-Finally, run the test suite to verify that everything is working correctly:
-
-```
-$ rails test
-```
-
-If the test suite passes, you'll be ready to run the app in a local server:
-
-```
-$ rails server
-```
-
-For more information, see the
-[*Ruby on Rails Tutorial* book](http://www.railstutorial.org/book).
