@@ -1,6 +1,6 @@
 # Parte 1.5 - Configuración avanzada de testeo
 
-[Volver al repositorio](https://github.com/Elolawyn/Rails5Tutorial/tree/master/README.md)
+[Volver al repositorio](https://github.com/Elolawyn/Rails5Tutorial)
 [Parte 1 - Comienzo de la aplicación](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/01/README.md)
 
 En esta parte se va a mejorar el proceso de testeo.

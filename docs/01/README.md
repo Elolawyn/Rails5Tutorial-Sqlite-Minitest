@@ -1,6 +1,6 @@
 # Parte 1 - Comienzo de la aplicación
 
-[Volver al repositorio](https://github.com/Elolawyn/Rails5Tutorial/tree/master/README.md)
+[Volver al repositorio](https://github.com/Elolawyn/Rails5Tutorial)
 
 En esta parte se va a crear la aplicación y se van a dar los primeros pasos del tutorial.
 
