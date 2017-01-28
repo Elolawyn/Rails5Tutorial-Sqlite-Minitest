@@ -92,4 +92,4 @@ Ejecutar:
 bundle exec guard
 ```
 
-[Parte 2 - Segunda parte](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/02/README.md)
+[Parte 2 - Helpers](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/02/README.md)
