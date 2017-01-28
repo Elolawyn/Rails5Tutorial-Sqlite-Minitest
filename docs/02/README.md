@@ -32,4 +32,4 @@ Eliminar de **app/views/static_pages/home.html.erb** el provide. Modificar los t
 assert_select "title", "Ruby on Rails Tutorial Sample App"
 ```
 
-[Parte 3 - Tercera parte](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/03/README.md)
+[Parte 3 - Aspecto de la aplicación](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/03/README.md)

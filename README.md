@@ -9,7 +9,9 @@ Aplicación resultante del [Tutorial de Ruby on Rails](http://www.railstutorial.
 2. [Instalación](#seccion02)
 3. [Parte 1 - Comienzo de la aplicación](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/01/README.md)
 4. [Parte 1.5 - Configuración avanzada de testeo](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/01_5/README.md)
-5. [Parte 2 - Segunda parte](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/02/README.md)
+5. [Parte 2 - Helpers](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/02/README.md)
+6. [Parte 3 - Aspecto de la aplicación](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/03/README.md)
+7. [Parte 4 - Parte 4](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/04/README.md)
 
 <div id='seccion01'/>
 ## Entorno
