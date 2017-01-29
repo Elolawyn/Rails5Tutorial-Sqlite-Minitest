@@ -14,7 +14,12 @@ Aplicación resultante del [Tutorial de Ruby on Rails](http://www.railstutorial.
 7. [Parte 4 - Modelando usuarios](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/04/README.md)
 8. [Parte 5 - Registro de usuarios](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/05/README.md)
 9. [Parte 6 - Login básico](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/06/README.md)
-10. [Parte 7 - Parte 7](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/07/README.md)
+10. [Parte 7 - Login avanzado](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/07/README.md)
+10. [Parte 8 - Actualización, perfil y borrado](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/08/README.md)
+10. [Parte 9 - Activación de cuenta](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/09/README.md)
+10. [Parte 10 - Reseteo de contraseña](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/10/README.md)
+10. [Parte 11 - Microposts](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/11/README.md)
+10. [Parte 12 - Seguimiento de usuarios](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/12/README.md)
 
 <div id='seccion01'/>
 ## Entorno

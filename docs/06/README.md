@@ -4,4 +4,4 @@
 
 
 
-[Parte 7 - Parte 7](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/07/README.md)
+[Parte 7 - Login avanzado](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/07/README.md)
