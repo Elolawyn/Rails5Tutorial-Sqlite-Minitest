@@ -2,7 +2,7 @@
 
 [Volver al repositorio](https://github.com/Elolawyn/Rails5Tutorial) - [Parte 3 - Aspecto de la aplicación](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/03/README.md)
 
-### Modelo User
+En esta parte vamos a crear el modelo de usuario.
 
 Modificar **Gemfile:**
 
@@ -10,13 +10,10 @@ Modificar **Gemfile:**
 gem 'bcrypt', '3.1.11'
 ```
 
-```bash
-bundle install
-```
-
 Ejecutar:
 
 ```bash
+bundle install
 rails generate model User name:string email:string
 rails generate migration add_index_to_users_email
 rails generate migration add_password_digest_to_users password_digest:string
@@ -140,4 +137,4 @@ end
 
 Revisar los ficheros para ver en qué consisten los tests y el modelo. Comprueba también las migraciones creadas y si quieres usa **DB Browser for SQLite** para comprobar la base de datos creada.
 
-[Parte 5 - Parte 5](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/05/README.md)
+[Parte 5 - Registro de usuarios](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/05/README.md)

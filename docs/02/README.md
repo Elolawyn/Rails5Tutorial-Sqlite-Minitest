@@ -4,8 +4,6 @@
 
 En esta parte vamos a crear el primer helper.
 
-### Mejorar el proceso de testeo
-
 Modificar **app/helpers/application_helper.rb:**
 
 ```ruby

@@ -4,8 +4,6 @@
 
 En esta parte vamos a mejorar el aspecto de la aplicación.
 
-### Aspecto de la aplicación y página de login
-
 Ejecutar:
 
 ```bash
