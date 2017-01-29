@@ -6,7 +6,7 @@ En esta parte vamos a mejorar el aspecto de la aplicación.
 
 ### Aspecto de la aplicación y página de login
 
-Ejecutar :
+Ejecutar:
 
 ```bash
 rails generate controller Users new
@@ -274,7 +274,7 @@ class StaticPagesControllerTest < ActionDispatch::IntegrationTest
 end
 ```
 
-Ejecutar :
+Ejecutar:
 
 ```bash
 rails generate integration_test site_layout
@@ -354,4 +354,4 @@ Modificar **app/views/users/new.html.erb:**
 <p>This will be a signup page for new users.</p>
 ```
 
-[Parte 4 - Parte 4](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/04/README.md)
+[Parte 4 - Modelando usuarios](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/04/README.md)

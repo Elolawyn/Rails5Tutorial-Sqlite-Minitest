@@ -1,68 +1,3 @@
-# Parte 4 - Modelando usuarios
-
-[Volver al repositorio](https://github.com/Elolawyn/Rails5Tutorial) - [Parte 3 - Aspecto de la aplicación](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/03/README.md)
-
-### Modelo User
-
-Modificar **Gemfile:**
-
-```ruby
-gem 'bcrypt', '3.1.11'
-```
-
-```bash
-bundle install
-```
-
-Ejecutar:
-
-```bash
-rails generate model User name:string email:string
-rails generate migration add_index_to_users_email
-rails generate migration add_password_digest_to_users password_digest:string
-```
-
-Modificar **db/migrate/NUMERO_add_index_to_users_email.rb:**
-
-```ruby
-class AddIndexToUsersEmail < ActiveRecord::Migration[5.0]
-  def change
-    add_index :users, :email, unique: true
-  end
-end
-```
-
-Modificar **test/fixtures/users.yml:**
-
-```YAML
-# empty
-```
-
-Ejecutar:
-
-```bash
-rails db:migrate
-```
-
-Modificar **app/models/user.rb:**
-
-```ruby
-class User < ApplicationRecord
-  before_save { email.downcase! }
-  
-  VALID_EMAIL_REGEX = /\A[\w+\-.]+@[a-z\d\-]+(\.[a-z\d\-]+)*\.[a-z]+\z/i
-  
-  has_secure_password
-  
-  validates :name,  presence: true, length: { maximum: 50 }
-  validates :email, presence: true, length: { maximum: 255 }, format: { with: VALID_EMAIL_REGEX }, uniqueness: { case_sensitive: false }
-  validates :password, presence: true, length: { minimum: 6 }
-end
-```
-
-Modificar **test/models/user_test.rb:**
-
-```ruby
 require 'test_helper'
 
 class UserTest < ActiveSupport::TestCase
@@ -136,8 +71,3 @@ class UserTest < ActiveSupport::TestCase
   end
 
 end
-```
-
-Revisar los ficheros para ver en qué consisten los tests y el modelo. Comprueba también las migraciones creadas y si quieres usa **DB Browser for SQLite** para comprobar la base de datos creada.
-
-[Parte 5 - Parte 5](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/05/README.md)
