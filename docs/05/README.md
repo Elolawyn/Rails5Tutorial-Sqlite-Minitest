@@ -283,4 +283,4 @@ Modificar **app/views/users/new.html.erb:**
 </div>
 ```
 
-[Parte 6 - Parte 6](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/06/README.md)
+[Parte 6 - Login básico](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/06/README.md)
