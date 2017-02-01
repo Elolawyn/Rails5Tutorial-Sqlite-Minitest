@@ -4,7 +4,7 @@
 
 Modificar **Gemfile:**
 
-```RHTML
+```ruby
 gem 'faker', '1.6.6'
 gem 'will_paginate',           '3.1.0'
 gem 'bootstrap-will_paginate', '0.0.10'
@@ -12,7 +12,7 @@ gem 'bootstrap-will_paginate', '0.0.10'
 
 Modificar **db/seeds.rb:**
 
-```RHTML
+```ruby
 User.create!(name: "Example User", email: "example@railstutorial.org", password: "foobar", password_confirmation: "foobar", admin: true)
 
 99.times do |n|
@@ -429,41 +429,5 @@ class UsersIndexTest < ActionDispatch::IntegrationTest
   end
 end
 ```
-
-Modificar **:**
-
-```ruby
-```
-
-Modificar **:**
-
-```ruby
-```
-
-Modificar **:**
-
-```ruby
-```
-
-Modificar **:**
-
-```ruby
-```
-
-Modificar **:**
-
-```ruby
-```
-
-Modificar **:**
-
-```ruby
-```
-
-Modificar **:**
-
-```ruby
-```
-
 
 [Parte 9 - Activación de cuenta](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/09/README.md)
