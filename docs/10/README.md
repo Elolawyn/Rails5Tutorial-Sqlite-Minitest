@@ -2,6 +2,8 @@
 
 [Volver al repositorio](https://github.com/Elolawyn/Rails5Tutorial) - [Parte 9 - Activación de cuenta](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/09/README.md)
 
+En esta parte vamos a añadir un sistema para permitir que un usuario que se haya olvidado su contraseña pueda cambiarla.
+
 Ejecutar:
 
 ```bash

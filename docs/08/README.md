@@ -2,6 +2,8 @@
 
 [Volver al repositorio](https://github.com/Elolawyn/Rails5Tutorial) - [Parte 7 - Login avanzado](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/07/README.md)
 
+En esta parte vamos a permitir a los usuarios ver su perfil y modificarlo. Los administradores podrán borrar usuarios.
+
 Modificar **Gemfile:**
 
 ```ruby

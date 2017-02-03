@@ -2,6 +2,8 @@
 
 [Volver al repositorio](https://github.com/Elolawyn/Rails5Tutorial) - [Parte 6 - Login básico](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/06/README.md)
 
+En esta parte vamos a añadir la capacidad de mantener la sesión abierta.
+
 Ejecutar:
 
 ```bash

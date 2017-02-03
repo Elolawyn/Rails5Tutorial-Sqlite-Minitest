@@ -2,6 +2,8 @@
 
 [Volver al repositorio](https://github.com/Elolawyn/Rails5Tutorial) - [Parte 8 - Actualización, perfil y borrado](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/08/README.md)
 
+En esta parte vamos a añadir un sistema de activación de cuenta mediante correo al usuario.
+
 Ejecutar:
 
 ```bash
