@@ -2,10 +2,46 @@
 
 [Volver al repositorio](https://github.com/Elolawyn/Rails5Tutorial) - [Parte 10 - Reseteo de contraseña](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/10/README.md)
 
+En esta parte vamos a añadir el modelo de microposts y todo lo necesario para su gestión.
+
+Modificar **Gemfile:**
+
+```ruby
+gem 'carrierwave', '0.11.2'
+gem 'mini_magick', '4.5.1'
+gem 'fog',         '1.38.0'
+```
+
+Ejecutar:
+
+```bash
+bundle install
+sudo apt-get update
+sudo apt-get install imagemagick --fix-missing
+cp app/assets/images/rails.png test/fixtures/
 rails generate model Micropost content:text user:references
+rails generate controller Microposts
+rails generate integration_test users_profile
+rails generate integration_test microposts_interface
+rails generate uploader Picture
+rails generate migration add_picture_to_microposts picture:string
+```
 
+Modificar **config/initializers/skip_image_resizing.rb:**
 
-db/migrate/[tiempo]_create_microposts.rb
+```ruby
+if Rails.env.test?
+  CarrierWave.configure do |config|
+    config.enable_processing = false
+  end
+end
+```
+
+Reiniciar todos los terminales, guard, servidor de rails, todo.
+
+Modificar **db/migrate/[tiempo]_create_microposts.rb:**
+
+```ruby
 class CreateMicroposts < ActiveRecord::Migration[5.0]
   def change
     create_table :microposts do |t|
@@ -17,57 +53,21 @@ class CreateMicroposts < ActiveRecord::Migration[5.0]
     add_index :microposts, [:user_id, :created_at]
   end
 end
+```
 
-rails db:migrate
+Modificar **db/seeds.rb:**
 
-test/models/micropost_test.rb
-require 'test_helper'
-
-class MicropostTest < ActiveSupport::TestCase
-
-  def setup
-    @user = users(:michael)
-    @micropost = @user.microposts.build(content: "Lorem ipsum")
-  end
-
-  test "should be valid" do
-    assert @micropost.valid?
-  end
-
-  test "user id should be present" do
-    @micropost.user_id = nil
-    assert_not @micropost.valid?
-  end
-
-  test "content should be present" do
-    @micropost.content = "   "
-    assert_not @micropost.valid?
-  end
-
-  test "content should be at most 140 characters" do
-    @micropost.content = "a" * 141
-    assert_not @micropost.valid?
-  end
-
-  test "order should be most recent first" do
-    assert_equal microposts(:most_recent), Micropost.first
-  end
+```ruby
+users = User.order(:created_at).take(6)
+50.times do
+  content = Faker::Lorem.sentence(5)
+  users.each { |user| user.microposts.create!(content: content) }
 end
+```
 
-app/models/micropost.rb
-class Micropost < ApplicationRecord
-  belongs_to :user
+Modificar **test/fixtures/microposts.yml:**
 
-  default_scope -> { order(created_at: :desc) }
-
-  validates :user_id, presence: true
-  validates :content, presence: true, length: { maximum: 140 }
-end
-
-app/models/user.rb
-  has_many :microposts, dependent: :destroy
-
-test/fixtures/microposts.yml
+```YAML
 orange:
   content: "I just ate an orange!"
   created_at: <%= 10.minutes.ago %>
@@ -114,74 +114,24 @@ van:
   content: "Dude, this van's, like, rolling probable cause."
   created_at: <%= 4.hours.ago %>
   user: lana
+```
 
+Ejecutar:
 
-test/models/user_test.rb
-  test "associated microposts should be destroyed" do
-    @user.save
-    @user.microposts.create!(content: "Lorem ipsum")
-    assert_difference 'Micropost.count', -1 do
-      @user.destroy
-    end
-  end
-
+```bash
 rails db:migrate:reset
 rails db:seed
-rails generate controller Microposts
+```
 
+Modificar **config/routes.rb:**
 
-app/views/microposts/_micropost.html.erb
-<li id="micropost-<%= micropost.id %>">
-  <%= link_to gravatar_for(micropost.user, size: 50), micropost.user %>
-  <span class="user"><%= link_to micropost.user.name, micropost.user %></span>
-  <span class="content"><%= micropost.content %></span>
-  <span class="timestamp">
-    Posted <%= time_ago_in_words(micropost.created_at) %> ago.
-  </span>
-</li>
+```ruby
+  resources :microposts,          only: [:create, :destroy]
+```
 
+Modificar **app/assets/stylesheets/custom.scss:**
 
-app/controllers/users_controller.rb
-  def show
-    @user = User.find(params[:id])
-    @microposts = @user.microposts.paginate(page: params[:page])
-  end
-
-app/views/users/show.html.erb
-<% provide(:title, @user.name) %>
-<div class="row">
-  <aside class="col-md-4">
-    <section class="user_info">
-      <h1>
-        <%= gravatar_for @user %>
-        <%= @user.name %>
-      </h1>
-    </section>
-  </aside>
-  <div class="col-md-8">
-    <% if @user.microposts.any? %>
-      <h3>Microposts (<%= @user.microposts.count %>)</h3>
-      <ol class="microposts">
-        <%= render @microposts %>
-      </ol>
-      <%= will_paginate @microposts %>
-    <% end %>
-  </div>
-</div>
-
-
-db/seeds.rb
-users = User.order(:created_at).take(6)
-50.times do
-  content = Faker::Lorem.sentence(5)
-  users.each { |user| user.microposts.create!(content: content) }
-end
-
-rails db:migrate:reset
-rails db:seed
-
-
-app/assets/stylesheets/custom.scss
+```SASS
 /* microposts */
 
 .microposts {
@@ -228,77 +178,69 @@ span.picture {
     border: 0;
   }
 }
+```
 
+Modificar **app/uploaders/picture_uploader.rb:**
 
-rails generate integration_test users_profile
+```ruby
+  include CarrierWave::MiniMagick
+  process resize_to_limit: [400, 400]
 
-
-test/integration/users_profile_test.rb
-require 'test_helper'
-
-class UsersProfileTest < ActionDispatch::IntegrationTest
-  include ApplicationHelper
-
-  def setup
-    @user = users(:michael)
+  # Add a white list of extensions which are allowed to be uploaded.
+  def extension_white_list
+    %w(jpg jpeg gif png)
   end
+```
 
-  test "profile display" do
-    get user_path(@user)
-    assert_template 'users/show'
-    assert_select 'title', full_title(@user.name)
-    assert_select 'h1', text: @user.name
-    assert_select 'h1>img.gravatar'
-    assert_match @user.microposts.count.to_s, response.body
-    assert_select 'div.pagination'
-    @user.microposts.paginate(page: 1).each do |micropost|
-      assert_match micropost.content, response.body
+Modificar **app/models/micropost.rb:**
+
+```ruby
+class Micropost < ApplicationRecord
+  belongs_to :user
+
+  default_scope -> { order(created_at: :desc) }
+
+  validates :user_id, presence: true
+  validates :content, presence: true, length: { maximum: 140 }
+  validate  :picture_size
+
+  mount_uploader :picture, PictureUploader
+
+  private
+
+    # Validates the size of an uploaded picture.
+    def picture_size
+      if picture.size > 5.megabytes
+        errors.add(:picture, "should be less than 5MB")
+      end
     end
-  end
 end
+```
 
+Modificar **app/models/user.rb:**
 
-config/routes.rb
-  resources :microposts,          only: [:create, :destroy]
+```ruby
+  has_many :microposts, dependent: :destroy
 
-
-test/controllers/microposts_controller_test.rb
-require 'test_helper'
-
-class MicropostsControllerTest < ActionDispatch::IntegrationTest
-
-  def setup
-    @micropost = microposts(:orange)
+  # Defines a proto-feed.
+  # See "Following users" for the full implementation.
+  def feed
+    Micropost.where("user_id = ?", id)
   end
+```
 
-  test "should redirect create when not logged in" do
-    assert_no_difference 'Micropost.count' do
-      post microposts_path, params: { micropost: { content: "Lorem ipsum" } }
-    end
-    assert_redirected_to login_url
+Modificar **app/controllers/users_controller.rb:**
+
+```ruby
+  def show
+    @user = User.find(params[:id])
+    @microposts = @user.microposts.paginate(page: params[:page])
   end
+```
 
-  test "should redirect destroy when not logged in" do
-    assert_no_difference 'Micropost.count' do
-      delete micropost_path(@micropost)
-    end
-    assert_redirected_to login_url
-  end
+Modificar **app/controllers/application_controller.rb:**
 
-  test "should redirect destroy for wrong micropost" do
-    log_in_as(users(:michael))
-    micropost = microposts(:ants)
-    assert_no_difference 'Micropost.count' do
-      delete micropost_path(micropost)
-    end
-    assert_redirected_to root_url
-  end
-
-end
-
-
-
-app/controllers/application_controller.rb
+```ruby
   private
 
     # Confirms a logged-in user.
@@ -310,9 +252,11 @@ app/controllers/application_controller.rb
       end
     end
     # Borrar de app/controllers/users_controller.rb
+```
 
+Modificar **app/controllers/microposts_controller.rb:**
 
-app/controllers/microposts_controller.rb
+```ruby
 class MicropostsController < ApplicationController
   before_action :logged_in_user, only: [:create, :destroy]
   before_action :correct_user,   only: :destroy
@@ -337,7 +281,7 @@ class MicropostsController < ApplicationController
   private
 
     def micropost_params
-      params.require(:micropost).permit(:content)
+      params.require(:micropost).permit(:content, :picture)
     end
 
     def correct_user
@@ -345,8 +289,60 @@ class MicropostsController < ApplicationController
       redirect_to root_url if @micropost.nil?
     end
 end
+```
 
-app/views/static_pages/home.html.erb
+Modificar **app/controllers/static_pages_controller.rb:**
+
+```ruby
+  def home
+    if logged_in?
+      @micropost  = current_user.microposts.build
+      @feed_items = current_user.feed.paginate(page: params[:page])
+    end
+  end
+```
+
+Modificar **app/views/microposts/_micropost.html.erb:**
+
+```RHTML
+<li id="micropost-<%= micropost.id %>">
+  <%= link_to gravatar_for(micropost.user, size: 50), micropost.user %>
+  <span class="user"><%= link_to micropost.user.name, micropost.user %></span>
+  <span class="content"><%= micropost.content %></span>
+  <span class="timestamp">
+    Posted <%= time_ago_in_words(micropost.created_at) %> ago.
+  </span>
+</li>
+```
+
+Modificar **app/views/users/show.html.erb:**
+
+```RHTML
+<% provide(:title, @user.name) %>
+<div class="row">
+  <aside class="col-md-4">
+    <section class="user_info">
+      <h1>
+        <%= gravatar_for @user %>
+        <%= @user.name %>
+      </h1>
+    </section>
+  </aside>
+  <div class="col-md-8">
+    <% if @user.microposts.any? %>
+      <h3>Microposts (<%= @user.microposts.count %>)</h3>
+      <ol class="microposts">
+        <%= render @microposts %>
+      </ol>
+      <%= will_paginate @microposts %>
+    <% end %>
+  </div>
+</div>
+```
+
+Modificar **app/views/static_pages/home.html.erb:**
+
+```RHTML
 <% if logged_in? %>
   <div class="row">
     <aside class="col-md-4">
@@ -377,15 +373,20 @@ app/views/static_pages/home.html.erb
 
   <%= link_to image_tag("rails.png", alt: "Rails logo"), 'http://rubyonrails.org/' %>
 <% end %>
+```
 
+Modificar **app/views/shared/_user_info.html.erb:**
 
-app/views/shared/_user_info.html.erb
+```RHTML
 <%= link_to gravatar_for(current_user, size: 50), current_user %>
 <h1><%= current_user.name %></h1>
 <span><%= link_to "view my profile", current_user %></span>
 <span><%= pluralize(current_user.microposts.count, "micropost") %></span>
+```
 
-app/views/shared/_micropost_form.html.erb
+Modificar **app/views/shared/_micropost_form.html.erb:**
+
+```RHTML
 <li id="<%= micropost.id %>">
   <%= link_to gravatar_for(micropost.user, size: 50), micropost.user %>
   <span class="user"><%= link_to micropost.user.name, micropost.user %></span>
@@ -397,18 +398,11 @@ app/views/shared/_micropost_form.html.erb
     <% end %>
   </span>
 </li>
+```
 
+Modificar **app/views/shared/_error_messages.html.erb:**
 
-app/controllers/static_pages_controller.rb
-  def home
-    if logged_in?
-      @micropost  = current_user.microposts.build
-      @feed_items = current_user.feed.paginate(page: params[:page])
-    end
-  end
-
-
-app/views/shared/_error_messages.html.erb
+```RHTML
 <% if object.errors.any? %>
   <div id="error_explanation">
     <div class="alert alert-danger">
@@ -421,34 +415,92 @@ app/views/shared/_error_messages.html.erb
     </ul>
   </div>
 <% end %>
+```
 
-app/views/users/_form.html.erb
+Modificar **app/views/users/_form.html.erb:**
+
+```RHTML
   <%= render 'shared/error_messages', object: f.object %>
+```
 
+Modificar **app/views/password_resets/edit.html.erb:**
 
-app/views/password_resets/edit.html.erb
+```RHTML
   <%= render 'shared/error_messages', object: f.object %>
+```
 
+Modificar **app/views/shared/_feed.html.erb:**
 
-app/models/user.rb
-  # Defines a proto-feed.
-  # See "Following users" for the full implementation.
-  def feed
-    Micropost.where("user_id = ?", id)
-  end
-
-
-app/views/shared/_feed.html.erb
+```RHTML
 <% if @feed_items.any? %>
   <ol class="microposts">
     <%= render @feed_items %>
   </ol>
   <%= will_paginate @feed_items %>
 <% end %>
+```
 
-rails generate integration_test microposts_interface
+Modificar **app/views/shared/_micropost_form.html.erb:**
 
-test/integration/microposts_interface_test.rb
+```RHTML
+<%= form_for(@micropost, html: { multipart: true }) do |f| %>
+  <%= render 'shared/error_messages', object: f.object %>
+  <div class="field">
+    <%= f.text_area :content, placeholder: "Compose new micropost..." %>
+  </div>
+  <%= f.submit "Post", class: "btn btn-primary" %>
+  <span class="picture">
+    <%= f.file_field :picture %>
+  </span>
+<% end %>
+```
+
+Modificar **app/views/microposts/_micropost.html.erb:**
+
+```RHTML
+<li id="micropost-<%= micropost.id %>">
+  <%= link_to gravatar_for(micropost.user, size: 50), micropost.user %>
+  <span class="user"><%= link_to micropost.user.name, micropost.user %></span>
+  <span class="content">
+    <%= micropost.content %>
+    <%= image_tag micropost.picture.url if micropost.picture? %>
+  </span>
+  <span class="timestamp">
+    Posted <%= time_ago_in_words(micropost.created_at) %> ago.
+    <% if current_user?(micropost.user) %>
+      <%= link_to "delete", micropost, method: :delete, data: { confirm: "You sure?" } %>
+    <% end %>
+  </span>
+</li>
+```
+
+Modificar **app/views/shared/_micropost_form.html.erb:**
+
+```RHTML
+<%= form_for(@micropost, html: { multipart: true }) do |f| %>
+  <%= render 'shared/error_messages', object: f.object %>
+  <div class="field">
+    <%= f.text_area :content, placeholder: "Compose new micropost..." %>
+  </div>
+  <%= f.submit "Post", class: "btn btn-primary" %>
+  <span class="picture">
+    <%= f.file_field :picture, accept: 'image/jpeg,image/gif,image/png' %>
+  </span>
+<% end %>
+
+<script type="text/javascript">
+  $('#micropost_picture').bind('change', function() {
+    var size_in_megabytes = this.files[0].size/1024/1024;
+    if (size_in_megabytes > 5) {
+      alert('Maximum file size is 5MB. Please choose a smaller file.');
+    }
+  });
+</script>
+```
+
+Modificar **test/integration/microposts_interface_test.rb:**
+
+```ruby
 require 'test_helper'
 
 class MicropostsInterfaceTest < ActionDispatch::IntegrationTest
@@ -484,63 +536,7 @@ class MicropostsInterfaceTest < ActionDispatch::IntegrationTest
     get user_path(users(:archer))
     assert_select 'a', text: 'delete', count: 0
   end
-end
 
-Gemfile
-gem 'carrierwave',             '0.11.2'
-gem 'mini_magick',             '4.5.1'
-gem 'fog',                     '1.38.0'
-
-
-bundle install
-
-rails generate uploader Picture
-rails generate migration add_picture_to_microposts picture:string
-rails db:migrate
-
-Reiniciar todos los terminales
-
-class Micropost < ApplicationRecord
-  mount_uploader :picture, PictureUploader
-
-
-app/views/shared/_micropost_form.html.erb
-<%= form_for(@micropost, html: { multipart: true }) do |f| %>
-  <%= render 'shared/error_messages', object: f.object %>
-  <div class="field">
-    <%= f.text_area :content, placeholder: "Compose new micropost..." %>
-  </div>
-  <%= f.submit "Post", class: "btn btn-primary" %>
-  <span class="picture">
-    <%= f.file_field :picture %>
-  </span>
-<% end %>
-
-
-app/controllers/microposts_controller.rb
-    def micropost_params
-      params.require(:micropost).permit(:content, :picture)
-    end
-
-app/views/microposts/_micropost.html.erb
-<li id="micropost-<%= micropost.id %>">
-  <%= link_to gravatar_for(micropost.user, size: 50), micropost.user %>
-  <span class="user"><%= link_to micropost.user.name, micropost.user %></span>
-  <span class="content">
-    <%= micropost.content %>
-    <%= image_tag micropost.picture.url if micropost.picture? %>
-  </span>
-  <span class="timestamp">
-    Posted <%= time_ago_in_words(micropost.created_at) %> ago.
-    <% if current_user?(micropost.user) %>
-      <%= link_to "delete", micropost, method: :delete, data: { confirm: "You sure?" } %>
-    <% end %>
-  </span>
-</li>
-
-cp app/assets/images/rails.png test/fixtures/
-
-test/integration/microposts_interface_test.rb
   test "micropost interface" do
     log_in_as(@user)
     get root_path
@@ -568,63 +564,119 @@ test/integration/microposts_interface_test.rb
     get user_path(users(:archer))
     assert_select 'a', { text: 'delete', count: 0 }
   end
+end
+```
 
+Modificar **test/integration/users_profile_test.rb:**
 
-app/uploaders/picture_uploader.rb
-  include CarrierWave::MiniMagick
-  process resize_to_limit: [400, 400]
+```ruby
+require 'test_helper'
 
-  # Add a white list of extensions which are allowed to be uploaded.
-  def extension_white_list
-    %w(jpg jpeg gif png)
+class UsersProfileTest < ActionDispatch::IntegrationTest
+  include ApplicationHelper
+
+  def setup
+    @user = users(:michael)
   end
 
-app/models/micropost.rb
-  validate  :picture_size
-
-  private
-
-    # Validates the size of an uploaded picture.
-    def picture_size
-      if picture.size > 5.megabytes
-        errors.add(:picture, "should be less than 5MB")
-      end
+  test "profile display" do
+    get user_path(@user)
+    assert_template 'users/show'
+    assert_select 'title', full_title(@user.name)
+    assert_select 'h1', text: @user.name
+    assert_select 'h1>img.gravatar'
+    assert_match @user.microposts.count.to_s, response.body
+    assert_select 'div.pagination'
+    @user.microposts.paginate(page: 1).each do |micropost|
+      assert_match micropost.content, response.body
     end
-
-app/views/shared/_micropost_form.html.erb
-<%= form_for(@micropost, html: { multipart: true }) do |f| %>
-  <%= render 'shared/error_messages', object: f.object %>
-  <div class="field">
-    <%= f.text_area :content, placeholder: "Compose new micropost..." %>
-  </div>
-  <%= f.submit "Post", class: "btn btn-primary" %>
-  <span class="picture">
-    <%= f.file_field :picture, accept: 'image/jpeg,image/gif,image/png' %>
-  </span>
-<% end %>
-
-<script type="text/javascript">
-  $('#micropost_picture').bind('change', function() {
-    var size_in_megabytes = this.files[0].size/1024/1024;
-    if (size_in_megabytes > 5) {
-      alert('Maximum file size is 5MB. Please choose a smaller file.');
-    }
-  });
-</script>
-
-
-sudo apt-get update
-sudo apt-get install imagemagick --fix-missing
-
-
-
-
-config/initializers/skip_image_resizing.rb
-if Rails.env.test?
-  CarrierWave.configure do |config|
-    config.enable_processing = false
   end
 end
+```
 
+Modificar **test/controllers/microposts_controller_test.rb:**
+
+```ruby
+require 'test_helper'
+
+class MicropostsControllerTest < ActionDispatch::IntegrationTest
+
+  def setup
+    @micropost = microposts(:orange)
+  end
+
+  test "should redirect create when not logged in" do
+    assert_no_difference 'Micropost.count' do
+      post microposts_path, params: { micropost: { content: "Lorem ipsum" } }
+    end
+    assert_redirected_to login_url
+  end
+
+  test "should redirect destroy when not logged in" do
+    assert_no_difference 'Micropost.count' do
+      delete micropost_path(@micropost)
+    end
+    assert_redirected_to login_url
+  end
+
+  test "should redirect destroy for wrong micropost" do
+    log_in_as(users(:michael))
+    micropost = microposts(:ants)
+    assert_no_difference 'Micropost.count' do
+      delete micropost_path(micropost)
+    end
+    assert_redirected_to root_url
+  end
+end
+```
+
+Modificar **test/models/micropost_test.rb:**
+
+```ruby
+require 'test_helper'
+
+class MicropostTest < ActiveSupport::TestCase
+
+  def setup
+    @user = users(:michael)
+    @micropost = @user.microposts.build(content: "Lorem ipsum")
+  end
+
+  test "should be valid" do
+    assert @micropost.valid?
+  end
+
+  test "user id should be present" do
+    @micropost.user_id = nil
+    assert_not @micropost.valid?
+  end
+
+  test "content should be present" do
+    @micropost.content = "   "
+    assert_not @micropost.valid?
+  end
+
+  test "content should be at most 140 characters" do
+    @micropost.content = "a" * 141
+    assert_not @micropost.valid?
+  end
+
+  test "order should be most recent first" do
+    assert_equal microposts(:most_recent), Micropost.first
+  end
+end
+```
+
+Modificar **test/models/user_test.rb:**
+
+```ruby
+  test "associated microposts should be destroyed" do
+    @user.save
+    @user.microposts.create!(content: "Lorem ipsum")
+    assert_difference 'Micropost.count', -1 do
+      @user.destroy
+    end
+  end
+```
 
 [Parte 12 - Seguimiento de usuarios](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/12/README.md)

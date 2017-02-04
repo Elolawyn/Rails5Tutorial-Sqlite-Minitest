@@ -1,5 +1,6 @@
 # Parte 12 - Seguimiento de usuarios
 
+[Volver al repositorio](https://github.com/Elolawyn/Rails5Tutorial) - [Parte 11 - Microposts](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/11/README.md)
 
 rails generate model Relationship follower_id:integer followed_id:integer
 
@@ -538,7 +539,3 @@ app/models/user.rb
     following_ids = "SELECT followed_id FROM relationships WHERE follower_id = :user_id"
     Micropost.where("user_id IN (#{following_ids}) OR user_id = :user_id", user_id: id)
   end
-
-
-
-[Volver al repositorio](https://github.com/Elolawyn/Rails5Tutorial) - [Parte 11 - Microposts](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/11/README.md)
