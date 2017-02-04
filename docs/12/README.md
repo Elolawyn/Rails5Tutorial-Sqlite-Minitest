@@ -2,163 +2,44 @@
 
 [Volver al repositorio](https://github.com/Elolawyn/Rails5Tutorial) - [Parte 11 - Microposts](https://github.com/Elolawyn/Rails5Tutorial/tree/master/docs/11/README.md)
 
+En esta parte vamos a añadir el modelo de relaciones para que los usuarios puedan seguirse entre ellos. También finalizaremos el feed.
+
+Ejecutar:
+
+```bash
 rails generate model Relationship follower_id:integer followed_id:integer
+rails generate integration_test following
+rails generate controller Relationships
+```
 
-db/migrate/[tiempo]_create_relationships.rb
-class CreateRelationships < ActiveRecord::Migration[5.0]
-  def change
-    create_table :relationships do |t|
-      t.integer :follower_id
-      t.integer :followed_id
+Modificar **config/application.rb:**
 
-      t.timestamps
-    end
-    add_index :relationships, :follower_id
-    add_index :relationships, :followed_id
-    add_index :relationships, [:follower_id, :followed_id], unique: true
+```ruby
+module SampleApp
+  class Application < Rails::Application
+    .
+    .
+    .
+    # Include the authenticity token in remote forms.
+    config.action_view.embed_authenticity_token_in_remote_forms = true
   end
 end
+```
 
-rails db:migrate
+Modificar **config/routes.rb:**
 
-
-app/models/user.rb
-  has_many :active_relationships, class_name: "Relationship", foreign_key: "follower_id", dependent: :destroy
-  has_many :passive_relationships, class_name: "Relationship", foreign_key: "followed_id", dependent: :destroy
-  has_many :following, through: :active_relationships, source: :followed
-  has_many :followers, through: :passive_relationships, source: :follower
-
-  # Follows a user.
-  def follow(other_user)
-    following << other_user
-  end
-
-  # Unfollows a user.
-  def unfollow(other_user)
-    following.delete(other_user)
-  end
-
-  # Returns true if the current user is following the other user.
-  def following?(other_user)
-    following.include?(other_user)
-  end
-
-app/models/relationship.rb
-class Relationship < ApplicationRecord
-  belongs_to :follower, class_name: "User"
-  belongs_to :followed, class_name: "User"
-  validates :follower_id, presence: true
-  validates :followed_id, presence: true
-end
-
-
-test/models/relationship_test.rb
-require 'test_helper'
-
-class RelationshipTest < ActiveSupport::TestCase
-
-  def setup
-    @relationship = Relationship.new(follower_id: users(:michael).id, followed_id: users(:archer).id)
-  end
-
-  test "should be valid" do
-    assert @relationship.valid?
-  end
-
-  test "should require a follower_id" do
-    @relationship.follower_id = nil
-    assert_not @relationship.valid?
-  end
-
-  test "should require a followed_id" do
-    @relationship.followed_id = nil
-    assert_not @relationship.valid?
-  end
-end
-
-test/fixtures/relationships.yml
-  # empty
-
-
-test/models/user_test.rb
-  test "should follow and unfollow a user" do
-    michael  = users(:michael)
-    archer   = users(:archer)
-    assert_not michael.following?(archer)
-    michael.follow(archer)
-    assert michael.following?(archer)
-    assert archer.followers.include?(michael)
-    michael.unfollow(archer)
-    assert_not michael.following?(archer)
-    assert_not archer.followers.include?(michael)
-  end
-
-db/seeds.rb
-# Following relationships
-users = User.all
-user  = users.first
-following = users[2..50]
-followers = users[3..40]
-following.each { |followed| user.follow(followed) }
-followers.each { |follower| follower.follow(user) }
-
-
-rails db:migrate:reset
-rails db:seed
-
-config/routes.rb
+```ruby
   resources :users do
     member do
       get :following, :followers
     end
   end
   resources :relationships, only: [:create, :destroy]
+```
 
-app/views/shared/_stats.html.erb
-<% @user ||= current_user %>
-<div class="stats">
-  <a href="<%= following_user_path(@user) %>">
-    <strong id="following" class="stat">
-      <%= @user.following.count %>
-    </strong>
-    following
-  </a>
-  <a href="<%= followers_user_path(@user) %>">
-    <strong id="followers" class="stat">
-      <%= @user.followers.count %>
-    </strong>
-    followers
-  </a>
-</div>
+Modificar **app/assets/stylesheets/custom.scss:**
 
-
-app/views/static_pages/home.html.erb
-<% if logged_in? %>
-  <div class="row">
-    <aside class="col-md-4">
-      <section class="user_info">
-        <%= render 'shared/user_info' %>
-      </section>
-      <section class="stats">
-        <%= render 'shared/stats' %>
-      </section>
-      <section class="micropost_form">
-        <%= render 'shared/micropost_form' %>
-      </section>
-    </aside>
-    <div class="col-md-8">
-      <h3>Micropost Feed</h3>
-      <%= render 'shared/feed' %>
-    </div>
-  </div>
-<% else %>
-  .
-  .
-  .
-<% end %>
-
-
-app/assets/stylesheets/custom.scss
+```SASS
 /* sidebar */
 .
 .
@@ -209,10 +90,203 @@ app/assets/stylesheets/custom.scss
 .users.follow {
   padding: 0;
 }
+```
 
+Modificar **db/migrate/[tiempo]_create_relationships.rb:**
 
+```ruby
+class CreateRelationships < ActiveRecord::Migration[5.0]
+  def change
+    create_table :relationships do |t|
+      t.integer :follower_id
+      t.integer :followed_id
 
-app/views/users/_follow_form.html.erb
+      t.timestamps
+    end
+    add_index :relationships, :follower_id
+    add_index :relationships, :followed_id
+    add_index :relationships, [:follower_id, :followed_id], unique: true
+  end
+end
+```
+
+Modificar **db/seeds.rb:**
+
+```ruby
+# Following relationships
+users = User.all
+user  = users.first
+following = users[2..50]
+followers = users[3..40]
+following.each { |followed| user.follow(followed) }
+followers.each { |follower| follower.follow(user) }
+```
+
+Modificar **app/models/user.rb:**
+
+```ruby
+  has_many :active_relationships, class_name: "Relationship", foreign_key: "follower_id", dependent: :destroy
+  has_many :passive_relationships, class_name: "Relationship", foreign_key: "followed_id", dependent: :destroy
+  has_many :following, through: :active_relationships, source: :followed
+  has_many :followers, through: :passive_relationships, source: :follower
+
+  # Follows a user.
+  def follow(other_user)
+    following << other_user
+  end
+
+  # Unfollows a user.
+  def unfollow(other_user)
+    following.delete(other_user)
+  end
+
+  # Returns true if the current user is following the other user.
+  def following?(other_user)
+    following.include?(other_user)
+  end
+
+  # Returns a user's status feed.
+  def feed
+    following_ids = "SELECT followed_id FROM relationships WHERE follower_id = :user_id"
+    Micropost.where("user_id IN (#{following_ids}) OR user_id = :user_id", user_id: id)
+  end
+```
+
+Modificar **app/models/relationship.rb:**
+
+```ruby
+class Relationship < ApplicationRecord
+  belongs_to :follower, class_name: "User"
+  belongs_to :followed, class_name: "User"
+  validates :follower_id, presence: true
+  validates :followed_id, presence: true
+end
+```
+
+Modificar **test/fixtures/relationships.yml:**
+
+```YAML
+one:
+  follower: michael
+  followed: lana
+
+two:
+  follower: michael
+  followed: malory
+
+three:
+  follower: lana
+  followed: michael
+
+four:
+  follower: archer
+  followed: michael
+```
+
+Ejecutar:
+
+```bash
+rails db:migrate:reset
+rails db:seed
+```
+
+Modificar **app/controllers/users_controller.rb:**
+
+```ruby
+  before_action :logged_in_user, only: [:index, :edit, :update, :destroy, :following, :followers]
+
+  def following
+    @title = "Following"
+    @user  = User.find(params[:id])
+    @users = @user.following.paginate(page: params[:page])
+    render 'show_follow'
+  end
+
+  def followers
+    @title = "Followers"
+    @user  = User.find(params[:id])
+    @users = @user.followers.paginate(page: params[:page])
+    render 'show_follow'
+  end
+```
+
+Modificar **app/controllers/relationships_controller.rb:**
+
+```ruby
+class RelationshipsController < ApplicationController
+  before_action :logged_in_user
+
+  def create
+    @user = User.find(params[:followed_id])
+    current_user.follow(@user)
+    respond_to do |format|
+      format.html { redirect_to @user }
+      format.js
+    end
+  end
+
+  def destroy
+    @user = Relationship.find(params[:id]).followed
+    current_user.unfollow(@user)
+    respond_to do |format|
+      format.html { redirect_to @user }
+      format.js
+    end
+  end
+end
+```
+
+Modificar **app/views/shared/_stats.html.erb:**
+
+```RHTML
+<% @user ||= current_user %>
+<div class="stats">
+  <a href="<%= following_user_path(@user) %>">
+    <strong id="following" class="stat">
+      <%= @user.following.count %>
+    </strong>
+    following
+  </a>
+  <a href="<%= followers_user_path(@user) %>">
+    <strong id="followers" class="stat">
+      <%= @user.followers.count %>
+    </strong>
+    followers
+  </a>
+</div>
+```
+
+Modificar **app/views/static_pages/home.html.erb:**
+
+```RHTML
+<% if logged_in? %>
+  <div class="row">
+    <aside class="col-md-4">
+      <section class="user_info">
+        <%= render 'shared/user_info' %>
+      </section>
+      <section class="stats">
+        <%= render 'shared/stats' %>
+      </section>
+      <section class="micropost_form">
+        <%= render 'shared/micropost_form' %>
+      </section>
+    </aside>
+    <div class="col-md-8">
+      <h3>Micropost Feed</h3>
+      <%= render 'shared/feed' %>
+    </div>
+  </div>
+<% else %>
+  .
+  .
+  .
+<% end %>
+```
+
+Modificar **app/views/users/_follow_form.html.erb:**
+
+```RHTML
 <% unless current_user?(@user) %>
   <div id="follow_form">
   <% if current_user.following?(@user) %>
@@ -222,21 +296,11 @@ app/views/users/_follow_form.html.erb
   <% end %>
   </div>
 <% end %>
+```
 
+Modificar **app/views/users/show.html.erb:**
 
-app/views/users/_follow.html.erb
-<%= form_for(current_user.active_relationships.build) do |f| %>
-  <div><%= hidden_field_tag :followed_id, @user.id %></div>
-  <%= f.submit "Follow", class: "btn btn-primary" %>
-<% end %>
-
-app/views/users/_unfollow.html.erb
-<%= form_for(current_user.active_relationships.find_by(followed_id: @user.id), html: { method: :delete }) do |f| %>
-  <%= f.submit "Unfollow", class: "btn" %>
-<% end %>
-
-
-app/views/users/show.html.erb
+```RHTML
 <% provide(:title, @user.name) %>
 <div class="row">
   <aside class="col-md-4">
@@ -261,41 +325,11 @@ app/views/users/show.html.erb
     <% end %>
   </div>
 </div>
+```
 
+Modificar **app/views/users/show_follow.html.erb:**
 
-
-test/controllers/users_controller_test.rb
-  test "should redirect following when not logged in" do
-    get following_user_path(@user)
-    assert_redirected_to login_url
-  end
-
-  test "should redirect followers when not logged in" do
-    get followers_user_path(@user)
-    assert_redirected_to login_url
-  end
-
-
-
-app/controllers/users_controller.rb
-  before_action :logged_in_user, only: [:index, :edit, :update, :destroy, :following, :followers]
-
-  def following
-    @title = "Following"
-    @user  = User.find(params[:id])
-    @users = @user.following.paginate(page: params[:page])
-    render 'show_follow'
-  end
-
-  def followers
-    @title = "Followers"
-    @user  = User.find(params[:id])
-    @users = @user.followers.paginate(page: params[:page])
-    render 'show_follow'
-  end
-
-
-app/views/users/show_follow.html.erb
+```RHTML
 <% provide(:title, @title) %>
 <div class="row">
   <aside class="col-md-4">
@@ -326,30 +360,57 @@ app/views/users/show_follow.html.erb
     <% end %>
   </div>
 </div>
+```
 
+Modificar **app/views/users/_follow.html.erb:**
 
-rails generate integration_test following
+```RHTML
 
+<%= form_for(current_user.active_relationships.build, remote: true) do |f| %>
+  <div><%= hidden_field_tag :followed_id, @user.id %></div>
+  <%= f.submit "Follow", class: "btn btn-primary" %>
+<% end %>
+```
 
-test/fixtures/relationships.yml
-one:
-  follower: michael
-  followed: lana
+Modificar **app/views/users/_unfollow.html.erb:**
 
-two:
-  follower: michael
-  followed: malory
+```RHTML
+<%= form_for(current_user.active_relationships.find_by(followed_id: @user.id), html: { method: :delete }, remote: true) do |f| %>
+  <%= f.submit "Unfollow", class: "btn" %>
+<% end %>
+```
 
-three:
-  follower: lana
-  followed: michael
+Modificar **app/views/relationships/create.js.erb:**
 
-four:
-  follower: archer
-  followed: michael
+```RHTML
+$("#follow_form").html("<%= escape_javascript(render('users/unfollow')) %>");
+$("#followers").html('<%= @user.followers.count %>');
+```
 
+Modificar **app/views/relationships/destroy.js.erb:**
 
-test/integration/following_test.rb
+```RHTML
+$("#follow_form").html("<%= escape_javascript(render('users/follow')) %>");
+$("#followers").html('<%= @user.followers.count %>');
+```
+
+Modificar **test/controllers/users_controller_test.rb:**
+
+```ruby
+  test "should redirect following when not logged in" do
+    get following_user_path(@user)
+    assert_redirected_to login_url
+  end
+
+  test "should redirect followers when not logged in" do
+    get followers_user_path(@user)
+    assert_redirected_to login_url
+  end
+```
+
+Modificar **test/integration/following_test.rb:**
+
+```ruby
 require 'test_helper'
 
 class FollowingTest < ActionDispatch::IntegrationTest
@@ -377,10 +438,11 @@ class FollowingTest < ActionDispatch::IntegrationTest
     end
   end
 end
+```
 
-rails generate controller Relationships
+Modificar **test/controllers/relationships_controller_test.rb:**
 
-test/controllers/relationships_controller_test.rb
+```ruby
 require 'test_helper'
 
 class RelationshipsControllerTest < ActionDispatch::IntegrationTest
@@ -399,85 +461,11 @@ class RelationshipsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to login_url
   end
 end
+```
 
+Modificar **test/integration/following_test.rb:**
 
-app/controllers/relationships_controller.rb
-class RelationshipsController < ApplicationController
-  before_action :logged_in_user
-
-  def create
-    user = User.find(params[:followed_id])
-    current_user.follow(user)
-    redirect_to user
-  end
-
-  def destroy
-    user = Relationship.find(params[:id]).followed
-    current_user.unfollow(user)
-    redirect_to user
-  end
-end
-
-
-app/views/users/_follow.html.erb
-<%= form_for(current_user.active_relationships.build, remote: true) do |f| %>
-  <div><%= hidden_field_tag :followed_id, @user.id %></div>
-  <%= f.submit "Follow", class: "btn btn-primary" %>
-<% end %>
-
-app/views/users/_unfollow.html.erb
-<%= form_for(current_user.active_relationships.find_by(followed_id: @user.id), html: { method: :delete }, remote: true) do |f| %>
-  <%= f.submit "Unfollow", class: "btn" %>
-<% end %>
-
-
-app/controllers/relationships_controller.rb
-class RelationshipsController < ApplicationController
-  before_action :logged_in_user
-
-  def create
-    @user = User.find(params[:followed_id])
-    current_user.follow(@user)
-    respond_to do |format|
-      format.html { redirect_to @user }
-      format.js
-    end
-  end
-
-  def destroy
-    @user = Relationship.find(params[:id]).followed
-    current_user.unfollow(@user)
-    respond_to do |format|
-      format.html { redirect_to @user }
-      format.js
-    end
-  end
-end
-
-
-config/application.rb
-module SampleApp
-  class Application < Rails::Application
-    .
-    .
-    .
-    # Include the authenticity token in remote forms.
-    config.action_view.embed_authenticity_token_in_remote_forms = true
-  end
-end
-
-
-app/views/relationships/create.js.erb
-$("#follow_form").html("<%= escape_javascript(render('users/unfollow')) %>");
-$("#followers").html('<%= @user.followers.count %>');
-
-
-app/views/relationships/destroy.js.erb
-$("#follow_form").html("<%= escape_javascript(render('users/follow')) %>");
-$("#followers").html('<%= @user.followers.count %>');
-
-
-test/integration/following_test.rb
+```ruby
   def setup
     @user  = users(:michael)
     @other = users(:archer)
@@ -511,9 +499,50 @@ test/integration/following_test.rb
       delete relationship_path(relationship), xhr: true
     end
   end
+```
 
+Modificar **test/models/relationship_test.rb:**
 
-test/models/user_test.rb
+```ruby
+require 'test_helper'
+
+class RelationshipTest < ActiveSupport::TestCase
+
+  def setup
+    @relationship = Relationship.new(follower_id: users(:michael).id, followed_id: users(:archer).id)
+  end
+
+  test "should be valid" do
+    assert @relationship.valid?
+  end
+
+  test "should require a follower_id" do
+    @relationship.follower_id = nil
+    assert_not @relationship.valid?
+  end
+
+  test "should require a followed_id" do
+    @relationship.followed_id = nil
+    assert_not @relationship.valid?
+  end
+end
+```
+
+Modificar **test/models/user_test.rb:**
+
+```ruby
+  test "should follow and unfollow a user" do
+    michael  = users(:michael)
+    archer   = users(:archer)
+    assert_not michael.following?(archer)
+    michael.follow(archer)
+    assert michael.following?(archer)
+    assert archer.followers.include?(michael)
+    michael.unfollow(archer)
+    assert_not michael.following?(archer)
+    assert_not archer.followers.include?(michael)
+  end
+
   test "feed should have the right posts" do
     michael = users(:michael)
     archer  = users(:archer)
@@ -531,11 +560,4 @@ test/models/user_test.rb
       assert_not michael.feed.include?(post_unfollowed)
     end
   end
-
-
-app/models/user.rb
-  # Returns a user's status feed.
-  def feed
-    following_ids = "SELECT followed_id FROM relationships WHERE follower_id = :user_id"
-    Micropost.where("user_id IN (#{following_ids}) OR user_id = :user_id", user_id: id)
-  end
+```
